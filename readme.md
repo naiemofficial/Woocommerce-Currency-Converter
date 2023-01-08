@@ -396,7 +396,7 @@ An example of usage purpose, suppose you want to change your Woocommerce currenc
                     ?>
                 </div>
                 <div class="author">
-                    Script made by <a target="_blank" href="https://github.com/naiemofficial">Naiem</a>
+                    Script made by <a target="_blank" href="https://naiem.info">Naiem</a>
                     <br>
                     <a class="github" target="_blank" href="https://github.com/naiemofficial/Woocommerce-Currency-Converter/">View on Github</a>
                 </div>
