@@ -1,5 +1,5 @@
 # Woocommerce Currency Converter
-<center><img src="https://user-images.githubusercontent.com/34242279/211212551-54a1f169-be78-48ee-8e3d-f50661569cda.png"/></center>
+<center><img src="https://user-images.githubusercontent.com/34242279/211313229-575a7cb8-2b64-4994-a355-2e635e20151d.png"/></center>
 The driver code is mainly for large-scale E-commerce websites on Wordpress to update multiple product prices at once. Especially the driver code is being used for converting existing currency to a new currency by providing the conversion value or exchange rate manually. <br>
 An example of usage purpose, suppose you want to change your Woocommerce currency but changing the currency doesn't make any effect on the product or changing the currency doesn't convert the price value as per the exchange rate between old currency and new currency. That's the point and this script was developed to solve this issue.
 <br><br>
@@ -28,15 +28,16 @@ An example of usage purpose, suppose you want to change your Woocommerce currenc
 ```php
 <?php 
     /*
-     * Template Name: Woocommerce Currency Converter
-     * Author: Abdullah Al Naiem
-     * Date: January 07, 2023
+    * Template Name: Woocommerce Currency Converter
+    * Author: Abdullah Al Naiem
+    * Date: January 07, 2023
     */
     global $paged;
     $posts_per_page = 50;
     $args = array(
         'post_type' => 'product',
         'posts_per_page' => $posts_per_page,
+    	'post_status' => array('publish', 'pending', 'draft', 'auto-draft', 'future', 'private', 'inherit', 'trash'),
         'paged' => $paged
     );
     $products = new WP_Query( $args );
@@ -92,6 +93,7 @@ An example of usage purpose, suppose you want to change your Woocommerce currenc
             display: flex;
             font-weight: 500;
             align-items: center;
+            line-height: 1;
         }
         header ul li+li {
             margin-left: 20px;
@@ -110,7 +112,7 @@ An example of usage purpose, suppose you want to change your Woocommerce currenc
             position: relative;
             margin: 0;
         }
-        .status.updated,
+        .status.update-eligible,
         .status.already-updated {
             background-color: #03d482;
         }
@@ -136,6 +138,8 @@ An example of usage purpose, suppose you want to change your Woocommerce currenc
             display: flex;
             justify-content: space-between;
             align-items: center;
+            position: absolute;
+            right: 20px;
         }
         .navigation {
             padding: 3px 10px;
@@ -365,7 +369,7 @@ An example of usage purpose, suppose you want to change your Woocommerce currenc
         <div>
             <h1><?php echo $title; ?></h1>
             <ul>
-                <li><span class="status updated"></span> Updated</li>
+                <li><span class="status update-eligible"></span> Eligible for update</li>
                 <li><span class="status already-updated"></span> Already Updated</li>
                 <li><span class="status not-updated"></span> Not Updated</li>
                 <li><span class="status update-not-required"></span> Update not required</li>
@@ -533,7 +537,7 @@ An example of usage purpose, suppose you want to change your Woocommerce currenc
                             <?php
                                 if(isset($_GET['update']) && $_GET['update'] == "true" && $update == true){
                                     update_post_meta($product->id, 'currency_exchange', true);
-                                    echo  "<span class='status updated' title='Updated'></span>" ;
+                                    echo  "<span class='status update-eligible' title='Eligible for update'></span>" ;
                                 } else if($exchangeStatus != "" && $exchangeStatus == true){
                                     echo "<span class='status already-updated' title='Already Updated'></span>";
                                 } else if($updateEligitble && $exchangeStatus != true) {

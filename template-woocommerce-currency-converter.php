@@ -1,14 +1,15 @@
 <?php 
 	/*
-     * Template Name: Woocommerce Currency Converter
-     * Author: Abdullah Al Naiem
-     * Date: January 07, 2023
+    * Template Name: Woocommerce Currency Converter
+    * Author: Abdullah Al Naiem
+    * Date: January 07, 2023
     */
     global $paged;
     $posts_per_page = 50;
     $args = array(
         'post_type' => 'product',
         'posts_per_page' => $posts_per_page,
+    	'post_status' => array('publish', 'pending', 'draft', 'auto-draft', 'future', 'private', 'inherit', 'trash'),
         'paged' => $paged
     );
     $products = new WP_Query( $args );
@@ -64,6 +65,7 @@
             display: flex;
             font-weight: 500;
             align-items: center;
+            line-height: 1;
         }
         header ul li+li {
             margin-left: 20px;
@@ -82,7 +84,7 @@
             position: relative;
             margin: 0;
         }
-        .status.updated,
+        .status.update-eligible,
         .status.already-updated {
             background-color: #03d482;
         }
@@ -108,6 +110,8 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            position: absolute;
+            right: 20px;
         }
         .navigation {
             padding: 3px 10px;
@@ -337,7 +341,7 @@
         <div>
             <h1><?php echo $title; ?></h1>
             <ul>
-                <li><span class="status updated"></span> Updated</li>
+                <li><span class="status update-eligible"></span> Eligible for update</li>
                 <li><span class="status already-updated"></span> Already Updated</li>
                 <li><span class="status not-updated"></span> Not Updated</li>
                 <li><span class="status update-not-required"></span> Update not required</li>
@@ -505,7 +509,7 @@
                             <?php
                                 if(isset($_GET['update']) && $_GET['update'] == "true" && $update == true){
                                     update_post_meta($product->id, 'currency_exchange', true);
-                                    echo  "<span class='status updated' title='Updated'></span>" ;
+                                    echo  "<span class='status update-eligible' title='Eligible for update'></span>" ;
                                 } else if($exchangeStatus != "" && $exchangeStatus == true){
                                     echo "<span class='status already-updated' title='Already Updated'></span>";
                                 } else if($updateEligitble && $exchangeStatus != true) {
