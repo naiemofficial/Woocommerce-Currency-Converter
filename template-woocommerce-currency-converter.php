@@ -15,6 +15,8 @@
     $products = new WP_Query( $args );
     $title = "Woocommerce - Currency Converter";
     $new_price = 7.53450;
+    $update_action = (isset($_GET['update']) && $_GET['update'] == "true") ? true : false;
+    $clear_wc_transient = (isset($_GET['clear']) && $_GET['clear'] == "wc_transients") ? true : false;
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -84,11 +86,10 @@
             position: relative;
             margin: 0;
         }
-        .status.update-eligible,
-        .status.already-updated {
+        .status.update-success {
             background-color: #03d482;
         }
-        .status.already-updated::before {
+        .status.update-success::before {
             content: '';
             height: 4px;
             width: 10px;
@@ -109,12 +110,12 @@
         .navigation-actions {
             display: flex;
             justify-content: space-between;
-            align-items: center;
+            align-items: flex-start;
             position: absolute;
             right: 20px;
         }
         .navigation {
-            padding: 3px 10px;
+            padding: 0 10px 5px 0;
             text-align: right;
         }
         .navigation > nav span,
@@ -133,10 +134,6 @@
             font-weight: 500;
             border-radius: 3px;
             transition: 0.3s;
-        }
-        .navigation > nav span {}
-        .navigation > nav span.current {
-
         }
         .navigation > nav span.current {
             background-color: #03d482;
@@ -160,8 +157,8 @@
             gap: 5px;
             padding-left: 10px;
         }
-        .navigation-actions > .actions button,
-        .navigation-actions > .actions .button {
+        .navigation-actions button,
+        .navigation-actions .button {
             width: 100%;
             height: 30px;
             line-height: 28px;
@@ -173,9 +170,24 @@
             cursor: pointer;
             transition: 0.3s;
         }
-        .navigation-actions > .actions button:hover,
-        .navigation-actions > .actions .button:hover {
+        .navigation-actions button:hover,
+        .navigation-actions .button:hover {
+            background-color: #8501c7;
+            border-color: #8501c7;
             color: #fff!important;
+        }
+        header .clear-wc-transients {
+            padding: 0 10px;
+            display: none;
+        }
+        header .clear-wc-transients button {
+            color: #ff1037;
+            border-color: #ff1037!important;
+            height: 20px;
+            line-height: 18px;
+        }
+        header .clear-wc-transients button:hover {
+            background-color: #ff1037;
         }
         .navigation-actions > .actions button.back {
             border-color: #ffa800;
@@ -214,10 +226,16 @@
             color: #00b06b;
             text-decoration: none;
         }
-        content {
-        }
-        content .content-wrapper {
-
+        content {}
+        content .content-wrapper {}
+        content .clear-wc-transients {
+            text-align: center;
+            color: #ff1037;
+            font-size: 14px;
+            font-weight: 500;
+            padding: 20px;
+            border: 2px dashed;
+            margin: 5px auto;
         }
         table {
             width: 100%;
@@ -245,11 +263,11 @@
             padding: 5px 10px;
         }
         table thead th.title {
-            min-width: 200px;
+            min-width: 145px;
         }
         table thead th.price {
-            width: 770px;
-            max-width: 770px;
+            width: 815px;
+            max-width: 815px;
         }
         table tbody td.title,
         table tbody td.price {
@@ -301,8 +319,8 @@
         }
         table tbody .prices .default-price,
         table tbody .price .variation-price {
-            min-width: 250px;
-            max-width: 250px;
+            min-width: 265px;
+            max-width: 265px;
             padding-bottom: 5px;
         }
         table tbody .prices > div > div {
@@ -341,9 +359,8 @@
         <div>
             <h1><?php echo $title; ?></h1>
             <ul>
-                <li><span class="status update-eligible"></span> Eligible for update</li>
-                <li><span class="status already-updated"></span> Already Updated</li>
-                <li><span class="status not-updated"></span> Not Updated</li>
+                <li><span class="status update-success"></span> Updated</li>
+                <li><span class="status not-updated"></span> Not updated</li>
                 <li><span class="status update-not-required"></span> Update not required</li>
                 <li>
                     <ul class="price">
@@ -355,6 +372,11 @@
             </ul>
         </div>
         <div class="navigation-actions">
+            <div class="clear-wc-transients">
+                <?php if(!$clear_wc_transient){ ?>
+                    <button onclick="confirmClear('<?php echo the_permalink(). ($paged > 0) ? 'page/'.$paged : '' ?>?clear=wc_transients')">Clear Woocommerce Transients</button>
+                <?php } ?>
+            </div>
             <div>
                 <div class="navigation">
                     <?php
@@ -362,12 +384,12 @@
                     add_filter( 'paginate_links', function( $link ){
                         return filter_input( INPUT_GET, 'update' ) ? remove_query_arg( 'update', $link ) : $link;
                     });
-                    echo "<nav>".paginate_links( array(
+                    echo "<nav>".paginate_links(array(
                         'base' => str_replace(999999999, '%#%', esc_url(get_pagenum_link(999999999))),
                         'format' => '?paged=%#%',
                         'current' => max( 1, get_query_var('paged') ),
                         'total' => $products->max_num_pages
-                    ) )."</nav>";
+                    ))."</nav>";
                     // END- Pagination
                     ?>
                 </div>
@@ -378,16 +400,21 @@
                 </div>
             </div>
             <div class="actions">
-                <?php if(isset($_GET['update']) && $_GET['update'] == "true"){ ?>
+                <?php if($update_action || $clear_wc_transient){ ?>
                     <a href="<?php echo the_permalink(). ($paged > 0) ? "page/".$paged : "" ?>"><button class="back">Back to default</button></a>
-                    <?php } else if(!isset($_GET['update']) || (isset($_GET['update']) && $_GET['update'] != "true")){ ?>
+                <?php } else if(!isset($_GET['update']) || (isset($_GET['update']) && $_GET['update'] != "true")){ ?>
                         <button class="update" onclick="confirmUpdate(<?php echo $paged; ?>, 'current', '<?php echo the_permalink(). ($paged > 0) ? 'page/'.$paged : '' ?>?update=true')">Update this page</button>
                 <?php } ?>
-                <button class="update-next" onclick="confirmUpdate(<?php echo $paged; ?>, 'next', '<?php echo the_permalink(). ($paged == 0) ? 'page/'.($paged+2) : (($paged > 0) ? 'page/'.($paged+1) : '') ?>?update=true')">Update Next Page</button>
+                <?php if(!$clear_wc_transient){ ?>
+                    <button class="update-next" onclick="confirmUpdate(<?php echo $paged; ?>, 'next', '<?php echo the_permalink(). ($paged == 0) ? 'page/'.($paged+2) : (($paged > 0) ? 'page/'.($paged+1) : '') ?>?update=true')">Update Next Page</button>
+                <?php } ?>
             </div>
         </div>
     </header>
     <content>
+        <?php if($clear_wc_transient){?>
+            <div class="clear-wc-transients">/wp-admin > WooCommerce > Status > Tools > Clear transients</div>
+        <?php } ?>
         <div class="content-wrapper">
             <table border="0">
                 <thead>
@@ -396,23 +423,26 @@
                         <th width="70px">Image</th>
                         <th width="60px">ID</th>
                         <th class="title">Title</th>
-                        <th class="price">Price | New Price</th>
+                        <th class="price">Price(s)</th>
                         <th width="15px">Status</th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php
+                        function validPrice($price){
+                            return (strlen((string)(float)$price) > 0 && (float)$price > 0);
+                        }
                         function displayPrice($status, $price, $updated_price){
                             echo "<span class='".($status == true ? 'updated-price' : 'old-price')."'>".$price."</span>". ($status != true ? "<span class='new-price'>".$updated_price."</span>" : "");
                         }
                         $sl = ($paged > 0) ? ((($paged*$posts_per_page)-$posts_per_page)+1) : 1;
                         if($products->have_posts()): while ( $products->have_posts() ) : $products->the_post(); 
                             global $product;
-                            $update = false;
-                            $updateEligitble = false;
+                            $updateSuccess = false;
+                            $updateEligible = false;
                             $exchangeStatus = get_post_meta($product->id, 'currency_exchange', true);
                             $exchangeStatus = ($exchangeStatus == "" ? false : $exchangeStatus);
-                            if((isset($_GET['update']) && $_GET['update'] == "true" && $exchangeStatus != true) || !isset($_GET['update']) || (isset($_GET['update']) && $_GET['update'] != "true")){
+                            if(($update_action && $exchangeStatus != true) || !isset($_GET['update']) || (isset($_GET['update']) && $_GET['update'] != "true")){
                     ?>
                     <tr>
                         <th><?php echo $sl++; ?></th>
@@ -431,32 +461,32 @@
                                 <div class="prices">
                                     <div class="default-price">
                                         <span class="price-heading">Default</span>
-                                        <?php if(strlen((string)(float)$_regular_price) > 0 && (float)$_regular_price > 0) { 
-                                            $updateEligitble = true;
+                                        <?php if(validPrice($_regular_price)){ 
+                                            $updateEligible = true;
                                             $updated_price = (float)$_regular_price/$new_price;
-                                            if(isset($_GET['update']) && $_GET['update'] == "true"){ 
+                                            if($update_action == true){ 
                                                 update_post_meta($product->id, '_regular_price', $updated_price); 
-                                                $update = true;
+                                                $updateSuccess = true;
                                             }
                                         ?>
                                             <div><b>Regular:</b> <?php displayPrice($exchangeStatus, $_regular_price, $updated_price); ?></div>
                                         <?php } ?>
-                                        <?php if(strlen((string)(float)$_sale_price) > 0 && (float)$_sale_price > 0) {
-                                            $updateEligitble = true;
+                                        <?php if(validPrice($_sale_price)){
+                                            $updateEligible = true;
                                             $updated_price = (float)$_sale_price/$new_price;
-                                            if(isset($_GET['update']) && $_GET['update'] == "true"){
+                                            if($update_action == true){
                                                 update_post_meta($product->id, '_sale_price', $updated_price);
-                                                $update = true;
+                                                $updateSuccess = true;
                                             }
                                         ?>
                                             <div><b>Sale:</b> <?php displayPrice($exchangeStatus, $_sale_price, $updated_price); ?></div>
                                         <?php } ?>
-                                        <?php if(strlen((string)(float)$_price) > 0 && (float)$_price > 0) {
-                                            $updateEligitble = true;
+                                        <?php if(validPrice($_price)){
+                                            $updateEligible = true;
                                             $updated_price = (float)$_price/$new_price;
-                                            if(isset($_GET['update']) && $_GET['update'] == "true"){
+                                            if($update_action && $update_action){
                                                 update_post_meta($product->id, '_price', $updated_price);
-                                                $update = true;
+                                                $updateSuccess = true;
                                             }
                                         ?>
                                             <div><b>Price:</b> <?php displayPrice($exchangeStatus, $_price, $updated_price); ?></div>
@@ -470,32 +500,32 @@
                                         ?>  
                                             <div class="variation-price">
                                                 <span class="price-heading">Variation - <?php echo $variation; ?></span>
-                                                <?php if(strlen((string)(float)$_regular_price) > 0 && (float)$_regular_price > 0) {
-                                                    $updateEligitble = true;
+                                                <?php if(validPrice($_regular_price)){
+                                                    $updateEligible = true;
                                                     $updated_price = (float)$_regular_price/$new_price;
-                                                    if(isset($_GET['update']) && $_GET['update'] == "true"){
+                                                    if($update_action && $update_action){
                                                         update_post_meta($variation, '_regular_price', $updated_price);
-                                                        $update = true;
+                                                        $updateSuccess = true;
                                                     }
                                                 ?>
                                                     <div><b>Regular:</b> <?php displayPrice($exchangeStatus, $_regular_price, $updated_price); ?></div>
                                                 <?php } ?>
-                                                <?php if(strlen((string)(float)$_sale_price) > 0 && (float)$_sale_price > 0) {
-                                                    $updateEligitble = true;
+                                                <?php if(validPrice($_sale_price)){
+                                                    $updateEligible = true;
                                                     $updated_price = (float)$_sale_price/$new_price;
-                                                    if(isset($_GET['update']) && $_GET['update'] == "true"){
+                                                    if($update_action && $update_action){
                                                         update_post_meta($variation, '_sale_price', $updated_price);
-                                                        $update = true;
+                                                        $updateSuccess = true;
                                                     }
                                                 ?>
                                                     <div><b>Sale:</b> <?php displayPrice($exchangeStatus, $_sale_price, $updated_price); ?></div>
                                                 <?php } ?>
-                                                <?php if(strlen((string)(float)$_price) > 0 && (float)$_price > 0) {
-                                                    $updateEligitble = true;
+                                                <?php if(validPrice($_price)){
+                                                    $updateEligible = true;
                                                     $updated_price = (float)$_price/$new_price;
-                                                    if(isset($_GET['update']) && $_GET['update'] == "true"){
+                                                    if($update_action && $update_action){
                                                         update_post_meta($variation, '_price', $updated_price);
-                                                        $update = true;
+                                                        $updateSuccess = true;
                                                     }
                                                 ?>
                                                     <div><b>Price:</b> <?php displayPrice($exchangeStatus, $_price, $updated_price); ?></div>
@@ -507,13 +537,13 @@
                         </td>
                         <td>
                             <?php
-                                if(isset($_GET['update']) && $_GET['update'] == "true" && $update == true){
+                                if(!$exchangeStatus && $updateEligible && $update_action && $updateSuccess){
                                     update_post_meta($product->id, 'currency_exchange', true);
-                                    echo  "<span class='status update-eligible' title='Eligible for update'></span>" ;
-                                } else if($exchangeStatus != "" && $exchangeStatus == true){
-                                    echo "<span class='status already-updated' title='Already Updated'></span>";
-                                } else if($updateEligitble && $exchangeStatus != true) {
-                                    echo "<span class='status not-updated' title='Not Updated'></span>";
+                                    echo  "<span class='status update-success' title='Updated'></span>" ;
+                                } else if(!$exchangeStatus && $updateEligible) {
+                                    echo "<span class='status not-updated' title='Not updated'></span>";
+                                } else if($exchangeStatus){
+                                    echo "<span class='status update-success' title='Already Updated'></span>";
                                 } else {
                                     echo "<span class='status update-not-required' title='Update not required'></span>";
                                 }
@@ -528,6 +558,11 @@
         </div>
     </content>
     <script>
+        function confirmClear(URL) {
+            if(confirm("Are you sure to clear/delete Woocommerce transients. This action can't be undone, make sure you've taken a backup before confirm the action.")){
+                window.location = URL;  
+            }
+        }
         function confirmUpdate(page, pageOf, URL) {
             if(pageOf == "next"){
                 page = (page == 0) ? 2 : page+1;
